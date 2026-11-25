@@ -1,0 +1,528 @@
+{
+  "entities": {
+    "Game": {
+      "title": "Game",
+      "description": "Verified Grand Theft Auto title metadata in the catalog (includes GTA VI with no verified codes yet).",
+      "type": "object",
+      "properties": {
+        "gameId": {
+          "type": "string",
+          "enum": ["gta_1", "gta_2", "gta_3", "gta_vc", "gta_sa", "gta_lcs", "gta_vcs", "gta_4", "gta_5", "gta_6"],
+          "description": "Unique GTA title identifier matching the document ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Full official game title."
+        },
+        "shortName": {
+          "type": "string",
+          "description": "Compact label for chips and badges."
+        },
+        "releaseYear": {
+          "type": "string",
+          "description": "Original release year or Upcoming."
+        },
+        "eraLabel": {
+          "type": "string",
+          "description": "Game universe or era label."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short verified summary of the game and cheat support."
+        },
+        "platforms": {
+          "type": "array",
+          "description": "Verified platforms with cheat support (empty for GTA VI)."
+        },
+        "artworkKey": {
+          "type": "string",
+          "enum": ["classic", "tropical", "modern", "hero"],
+          "description": "Bundled visual theme artwork key."
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Whether the game appears in the Home featured carousel."
+        },
+        "hasVerifiedCodes": {
+          "type": "boolean",
+          "description": "True only when verified cheat codes exist for this game (false for GTA VI)."
+        },
+        "statusNote": {
+          "type": "string",
+          "description": "Verification and platform compatibility note."
+        },
+        "sortOrder": {
+          "type": "integer",
+          "description": "Chronological display order (1 to 10)."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["PUBLIC"],
+          "description": "Catalog visibility marker used for scoped public queries."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Firebase Auth UID of the authenticated client that seeded the document."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "gameId",
+        "name",
+        "shortName",
+        "releaseYear",
+        "eraLabel",
+        "description",
+        "platforms",
+        "artworkKey",
+        "featured",
+        "hasVerifiedCodes",
+        "statusNote",
+        "sortOrder",
+        "visibility",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CheatCode": {
+      "title": "CheatCode",
+      "description": "Strictly verified cheat code entry for a supported GTA game and platform (never GTA VI).",
+      "type": "object",
+      "properties": {
+        "codeId": {
+          "type": "string",
+          "description": "Unique cheat code identifier matching the document ID."
+        },
+        "gameId": {
+          "type": "string",
+          "enum": ["gta_1", "gta_2", "gta_3", "gta_vc", "gta_sa", "gta_lcs", "gta_vcs", "gta_4", "gta_5"],
+          "description": "Referenced GTA game ID (GTA VI excluded until verified)."
+        },
+        "gameName": {
+          "type": "string",
+          "description": "Display name of the referenced GTA game."
+        },
+        "title": {
+          "type": "string",
+          "description": "Cheat code display name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Clear description of the cheat code effect."
+        },
+        "code": {
+          "type": "string",
+          "description": "Exact verified text code, phone number, or button sequence."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["PC", "PLAYSTATION", "PSP", "XBOX", "IN_GAME_PHONE", "ANDROID", "IOS"],
+          "description": "Verified supported gaming platform category."
+        },
+        "platformLabel": {
+          "type": "string",
+          "description": "Exact platform label as written in the verified reference guide."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["PLAYER", "WEAPONS", "VEHICLES", "POLICE", "WEATHER", "SPECIAL", "WORLD"],
+          "description": "Referenced cheat category ID."
+        },
+        "instructions": {
+          "type": "string",
+          "description": "Verified activation instructions for this platform."
+        },
+        "keywords": {
+          "type": "string",
+          "description": "Space-separated search keywords for vehicles, weapons, and effects."
+        },
+        "popular": {
+          "type": "boolean",
+          "description": "Whether the cheat appears in Popular Cheat Codes."
+        },
+        "verificationStatus": {
+          "type": "string",
+          "enum": ["VERIFIED", "needs_verification"],
+          "description": "Verification status (VERIFIED or needs_verification)."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["PUBLIC"],
+          "description": "Catalog visibility marker used for scoped public queries."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Firebase Auth UID of the authenticated client that seeded the document."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "codeId",
+        "gameId",
+        "title",
+        "code",
+        "platform",
+        "platformLabel",
+        "category",
+        "instructions",
+        "keywords",
+        "popular",
+        "verificationStatus",
+        "visibility",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Cheat code category definition used to organize codes across GTA games.",
+      "type": "object",
+      "properties": {
+        "categoryId": {
+          "type": "string",
+          "enum": ["PLAYER", "WEAPONS", "VEHICLES", "POLICE", "WEATHER", "SPECIAL", "WORLD"],
+          "description": "Unique category identifier matching the document ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable category display name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short summary of cheat codes in this category."
+        },
+        "iconKey": {
+          "type": "string",
+          "description": "Icon identifier for UI rendering."
+        },
+        "sortOrder": {
+          "type": "integer",
+          "description": "Display order (1 to 7)."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["PUBLIC"],
+          "description": "Catalog visibility marker used for scoped public queries."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Firebase Auth UID of the authenticated client that seeded the document."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "categoryId",
+        "name",
+        "description",
+        "iconKey",
+        "sortOrder",
+        "visibility",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Tutorial": {
+      "title": "Tutorial",
+      "description": "Verified guide teaching players how to enter and safely use GTA cheat codes on each platform.",
+      "type": "object",
+      "properties": {
+        "tutorialId": {
+          "type": "string",
+          "enum": [
+            "tut_pc_classic",
+            "tut_pc_gtav",
+            "tut_console_buttons",
+            "tut_gta4_phone",
+            "tut_mobile_ports",
+            "tut_safety_tips"
+          ],
+          "description": "Unique tutorial identifier matching the document ID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Tutorial heading."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["PC", "PLAYSTATION", "XBOX", "ANDROID", "IOS", "ALL"],
+          "description": "Target platform or ALL."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Brief overview of the tutorial."
+        },
+        "steps": {
+          "type": "array",
+          "description": "Ordered step-by-step instructions."
+        },
+        "supportedGames": {
+          "type": "array",
+          "description": "List of GTA titles this tutorial applies to."
+        },
+        "sortOrder": {
+          "type": "integer",
+          "description": "Display order (1 to 6)."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["PUBLIC"],
+          "description": "Catalog visibility marker used for scoped public queries."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Firebase Auth UID of the authenticated client that seeded the document."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "tutorialId",
+        "title",
+        "platform",
+        "summary",
+        "steps",
+        "supportedGames",
+        "sortOrder",
+        "visibility",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CodeReport": {
+      "title": "CodeReport",
+      "description": "Real user-submitted report flagging an incorrect, unsupported, missing, or outdated cheat code.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the reporting user."
+        },
+        "codeId": {
+          "type": "string",
+          "description": "Referenced cheat code ID in /cheat_codes."
+        },
+        "codeTitle": {
+          "type": "string",
+          "description": "Display title of the reported cheat code."
+        },
+        "gameId": {
+          "type": "string",
+          "description": "Referenced GTA game ID."
+        },
+        "gameName": {
+          "type": "string",
+          "description": "Name of the GTA game."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["PC", "PLAYSTATION", "PSP", "XBOX", "IN_GAME_PHONE", "ANDROID", "IOS"],
+          "description": "Platform of the reported code."
+        },
+        "reportType": {
+          "type": "string",
+          "enum": [
+            "INCORRECT_CODE",
+            "UNSUPPORTED_PLATFORM",
+            "MISSING_INFO",
+            "OUTDATED_INSTRUCTIONS"
+          ],
+          "description": "Category of the reported issue."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional user notes describing the issue."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["SUBMITTED"],
+          "description": "Report review status."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "codeId",
+        "codeTitle",
+        "gameId",
+        "gameName",
+        "platform",
+        "reportType",
+        "status",
+        "createdAt"
+      ]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated player profile and synced app preferences.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name from Google Sign-In."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address from Google Sign-In, isolated to owner read only."
+        },
+        "darkTheme": {
+          "type": "boolean",
+          "description": "Whether Vice Night dark theme is enabled."
+        },
+        "languageCode": {
+          "type": "string",
+          "enum": ["en", "hi", "gu"],
+          "description": "Preferred UI language code."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "displayName", "darkTheme", "languageCode", "createdAt", "updatedAt"]
+    },
+    "CloudFavorite": {
+      "title": "CloudFavorite",
+      "description": "A verified GTA cheat code bookmarked by the user.",
+      "type": "object",
+      "properties": {
+        "codeId": {
+          "type": "string",
+          "description": "Catalog identifier matching the document ID."
+        },
+        "gameId": {
+          "type": "string",
+          "description": "GTA game identifier."
+        },
+        "title": {
+          "type": "string",
+          "description": "Cheat code display title."
+        },
+        "code": {
+          "type": "string",
+          "description": "Cheat code sequence or phone number."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["PC", "PLAYSTATION", "PSP", "XBOX", "IN_GAME_PHONE", "ANDROID", "IOS"],
+          "description": "Verified platform ID."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["codeId", "gameId", "title", "code", "platform", "createdAt"]
+    },
+    "CloudRecentGame": {
+      "title": "CloudRecentGame",
+      "description": "Tracks when a user last viewed a GTA game section.",
+      "type": "object",
+      "properties": {
+        "gameId": {
+          "type": "string",
+          "description": "GTA game identifier matching the document ID."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp updated on each view via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["gameId", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/games/{gameId}": {
+      "schema": { "$ref": "#/entities/Game" },
+      "description": "Verified GTA games directory (GTA 1 through GTA VI)."
+    },
+    "/cheat_codes/{codeId}": {
+      "schema": { "$ref": "#/entities/CheatCode" },
+      "description": "Strictly verified cheat codes across GTA 1 through GTA V (zero GTA VI codes)."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Cheat code category metadata."
+    },
+    "/tutorials/{tutorialId}": {
+      "schema": { "$ref": "#/entities/Tutorial" },
+      "description": "Verified platform guides explaining how to enter and use GTA cheat codes."
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/CodeReport" },
+      "description": "User-submitted incorrect-code reports scoped strictly by userId."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Per-user profile and preference document."
+    },
+    "/users/{userId}/favorites/{codeId}": {
+      "schema": { "$ref": "#/entities/CloudFavorite" },
+      "description": "Per-user synced favorite GTA cheat codes."
+    },
+    "/users/{userId}/recent_games/{gameId}": {
+      "schema": { "$ref": "#/entities/CloudRecentGame" },
+      "description": "Per-user synced recently viewed GTA games."
+    }
+  }
+}

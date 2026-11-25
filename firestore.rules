@@ -1,0 +1,528 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ==================== CORE PRIMITIVES ====================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isBootstrappedOwner() {
+      return isSignedIn() &&
+        'email' in request.auth.token &&
+        'email_verified' in request.auth.token &&
+        request.auth.token.email == 'parthkunjadiya95@gmail.com' &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string &&
+        id.size() >= 1 &&
+        id.size() <= 128 &&
+        id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidPlatform(platform) {
+      return platform is string &&
+        platform in ['PC', 'PLAYSTATION', 'PSP', 'XBOX', 'IN_GAME_PHONE', 'ANDROID', 'IOS'];
+    }
+
+    function isValidTutorialPlatform(platform) {
+      return platform is string &&
+        platform in ['PC', 'PLAYSTATION', 'PSP', 'XBOX', 'IN_GAME_PHONE', 'ANDROID', 'IOS', 'ALL'];
+    }
+
+    function isValidCategoryId(cat) {
+      return cat is string &&
+        cat in ['PLAYER', 'WEAPONS', 'VEHICLES', 'POLICE', 'WEATHER', 'SPECIAL', 'WORLD'];
+    }
+
+    function isValidGameId(gameId) {
+      return gameId is string &&
+        gameId in ['gta_1', 'gta_2', 'gta_3', 'gta_vc', 'gta_sa', 'gta_lcs', 'gta_vcs', 'gta_4', 'gta_5', 'gta_6'];
+    }
+
+    function isValidVerifiedCodeGameId(gameId) {
+      // Strictly excludes gta_6 until officially released and verified
+      return gameId is string &&
+        gameId in ['gta_1', 'gta_2', 'gta_3', 'gta_vc', 'gta_sa', 'gta_lcs', 'gta_vcs', 'gta_4', 'gta_5'];
+    }
+
+    function isValidTutorialId(tutId) {
+      return tutId is string &&
+        tutId in [
+          'tut_pc_classic',
+          'tut_pc_gtav',
+          'tut_console_buttons',
+          'tut_gta4_phone',
+          'tut_mobile_ports',
+          'tut_safety_tips'
+        ];
+    }
+
+    function isValidReportType(reportType) {
+      return reportType is string &&
+        reportType in [
+          'INCORRECT_CODE',
+          'UNSUPPORTED_PLATFORM',
+          'MISSING_INFO',
+          'OUTDATED_INSTRUCTIONS'
+        ];
+    }
+
+    function isValidLanguage(code) {
+      return code is string && code in ['en', 'hi', 'gu'];
+    }
+
+    // ==================== VALIDATION BLUEPRINTS ====================
+
+    function isValidGame(data, gameId) {
+      return isValidGameId(gameId) &&
+        data.gameId is string &&
+        data.gameId == gameId &&
+        data.name is string &&
+        data.name.size() >= 2 &&
+        data.name.size() <= 100 &&
+        data.shortName is string &&
+        data.shortName.size() >= 2 &&
+        data.shortName.size() <= 40 &&
+        data.releaseYear is string &&
+        data.releaseYear.size() >= 4 &&
+        data.releaseYear.size() <= 20 &&
+        data.eraLabel is string &&
+        data.eraLabel.size() >= 2 &&
+        data.eraLabel.size() <= 50 &&
+        data.description is string &&
+        data.description.size() >= 10 &&
+        data.description.size() <= 600 &&
+        data.platforms is list &&
+        data.platforms.size() <= 7 &&
+        (data.platforms.size() == 0 || data.platforms.hasOnly(['PC', 'PLAYSTATION', 'PSP', 'XBOX', 'IN_GAME_PHONE', 'ANDROID', 'IOS'])) &&
+        data.artworkKey is string &&
+        data.artworkKey in ['classic', 'tropical', 'modern', 'hero'] &&
+        data.featured is bool &&
+        data.hasVerifiedCodes is bool &&
+        (gameId != 'gta_6' || (data.hasVerifiedCodes == false && data.platforms.size() == 0)) &&
+        data.statusNote is string &&
+        data.statusNote.size() >= 4 &&
+        data.statusNote.size() <= 300 &&
+        data.sortOrder is int &&
+        data.sortOrder >= 1 &&
+        data.sortOrder <= 20 &&
+        data.visibility is string &&
+        data.visibility == 'PUBLIC' &&
+        data.createdBy is string &&
+        isValidId(data.createdBy) &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidCheatCode(data, codeId) {
+      return isValidId(codeId) &&
+        data.codeId is string &&
+        data.codeId == codeId &&
+        isValidVerifiedCodeGameId(data.gameId) &&
+        (!('gameName' in data) || (data.gameName is string && data.gameName.size() >= 2 && data.gameName.size() <= 100)) &&
+        data.title is string &&
+        data.title.size() >= 2 &&
+        data.title.size() <= 150 &&
+        (!('description' in data) || (data.description is string && data.description.size() >= 2 && data.description.size() <= 400)) &&
+        data.code is string &&
+        data.code.size() >= 2 &&
+        data.code.size() <= 250 &&
+        isValidPlatform(data.platform) &&
+        data.platformLabel is string &&
+        data.platformLabel.size() >= 1 &&
+        data.platformLabel.size() <= 80 &&
+        isValidCategoryId(data.category) &&
+        data.instructions is string &&
+        data.instructions.size() >= 5 &&
+        data.instructions.size() <= 600 &&
+        data.keywords is string &&
+        data.keywords.size() >= 1 &&
+        data.keywords.size() <= 300 &&
+        data.popular is bool &&
+        data.verificationStatus is string &&
+        data.verificationStatus in ['VERIFIED', 'needs_verification'] &&
+        data.visibility is string &&
+        data.visibility == 'PUBLIC' &&
+        data.createdBy is string &&
+        isValidId(data.createdBy) &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidCategory(data, categoryId) {
+      return isValidCategoryId(categoryId) &&
+        data.categoryId is string &&
+        data.categoryId == categoryId &&
+        data.name is string &&
+        data.name.size() >= 2 &&
+        data.name.size() <= 80 &&
+        data.description is string &&
+        data.description.size() >= 5 &&
+        data.description.size() <= 300 &&
+        data.iconKey is string &&
+        data.iconKey.size() >= 2 &&
+        data.iconKey.size() <= 40 &&
+        data.sortOrder is int &&
+        data.sortOrder >= 1 &&
+        data.sortOrder <= 20 &&
+        data.visibility is string &&
+        data.visibility == 'PUBLIC' &&
+        data.createdBy is string &&
+        isValidId(data.createdBy) &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidTutorial(data, tutorialId) {
+      return isValidTutorialId(tutorialId) &&
+        data.tutorialId is string &&
+        data.tutorialId == tutorialId &&
+        data.title is string &&
+        data.title.size() >= 3 &&
+        data.title.size() <= 140 &&
+        isValidTutorialPlatform(data.platform) &&
+        data.summary is string &&
+        data.summary.size() >= 5 &&
+        data.summary.size() <= 300 &&
+        data.steps is list &&
+        data.steps.size() >= 1 &&
+        data.steps.size() <= 10 &&
+        data.steps[0] is string &&
+        data.supportedGames is list &&
+        data.supportedGames.size() >= 1 &&
+        data.supportedGames.size() <= 10 &&
+        data.supportedGames[0] is string &&
+        data.sortOrder is int &&
+        data.sortOrder >= 1 &&
+        data.sortOrder <= 20 &&
+        data.visibility is string &&
+        data.visibility == 'PUBLIC' &&
+        data.createdBy is string &&
+        isValidId(data.createdBy) &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidCodeReport(data) {
+      return data.userId is string &&
+        data.userId == request.auth.uid &&
+        data.codeId is string &&
+        isValidId(data.codeId) &&
+        data.codeTitle is string &&
+        data.codeTitle.size() >= 1 &&
+        data.codeTitle.size() <= 200 &&
+        isValidGameId(data.gameId) &&
+        data.gameName is string &&
+        data.gameName.size() >= 1 &&
+        data.gameName.size() <= 120 &&
+        isValidPlatform(data.platform) &&
+        isValidReportType(data.reportType) &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 500)) &&
+        data.status is string &&
+        data.status == 'SUBMITTED' &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.userId is string &&
+        data.userId == userId &&
+        data.userId == request.auth.uid &&
+        data.displayName is string &&
+        data.displayName.size() >= 1 &&
+        data.displayName.size() <= 100 &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+        data.darkTheme is bool &&
+        isValidLanguage(data.languageCode) &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidCloudFavorite(data, codeId) {
+      return data.codeId is string &&
+        data.codeId == codeId &&
+        isValidId(data.codeId) &&
+        isValidGameId(data.gameId) &&
+        data.title is string &&
+        data.title.size() >= 1 &&
+        data.title.size() <= 200 &&
+        data.code is string &&
+        data.code.size() >= 1 &&
+        data.code.size() <= 250 &&
+        isValidPlatform(data.platform) &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time;
+    }
+
+    function isValidCloudRecentGame(data, gameId) {
+      return isValidGameId(gameId) &&
+        data.gameId is string &&
+        data.gameId == gameId &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    // ==================== 1. GAMES COLLECTION ====================
+
+    match /games/{gameId} {
+      allow get: if isSignedIn() && isValidId(gameId) && existing().visibility == 'PUBLIC';
+      allow list: if isSignedIn() && existing().visibility == 'PUBLIC';
+
+      allow create: if isSignedIn() &&
+        isValidId(gameId) &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().keys().hasAll([
+          'gameId', 'name', 'shortName', 'releaseYear', 'eraLabel',
+          'description', 'platforms', 'artworkKey', 'featured',
+          'hasVerifiedCodes', 'statusNote', 'sortOrder', 'visibility',
+          'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'gameId', 'name', 'shortName', 'releaseYear', 'eraLabel',
+          'description', 'platforms', 'artworkKey', 'featured',
+          'hasVerifiedCodes', 'statusNote', 'sortOrder', 'visibility',
+          'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidGame(incoming(), gameId);
+
+      allow update: if isBootstrappedOwner() &&
+        isValidId(gameId) &&
+        isValidGame(incoming(), gameId) &&
+        incoming().gameId == existing().gameId &&
+        incoming().createdBy == existing().createdBy &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'shortName', 'releaseYear', 'eraLabel', 'description',
+          'platforms', 'artworkKey', 'featured', 'hasVerifiedCodes',
+          'statusNote', 'sortOrder', 'updatedAt'
+        ]);
+
+      allow delete: if isBootstrappedOwner() && isValidId(gameId);
+    }
+
+    // ==================== 2. CHEAT_CODES COLLECTION ====================
+
+    match /cheat_codes/{codeId} {
+      allow get: if isSignedIn() && isValidId(codeId) && existing().visibility == 'PUBLIC';
+      allow list: if isSignedIn() && existing().visibility == 'PUBLIC';
+
+      allow create: if isSignedIn() &&
+        isValidId(codeId) &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().keys().hasAll([
+          'codeId', 'gameId', 'title', 'code', 'platform', 'platformLabel', 'category',
+          'instructions', 'keywords', 'popular', 'verificationStatus',
+          'visibility', 'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'codeId', 'gameId', 'gameName', 'title', 'description', 'code', 'platform', 'platformLabel', 'category',
+          'instructions', 'keywords', 'popular', 'verificationStatus',
+          'visibility', 'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidCheatCode(incoming(), codeId) &&
+        exists(/databases/$(database)/documents/games/$(incoming().gameId)) &&
+        exists(/databases/$(database)/documents/categories/$(incoming().category));
+
+      allow update: if isBootstrappedOwner() &&
+        isValidId(codeId) &&
+        isValidCheatCode(incoming(), codeId) &&
+        incoming().codeId == existing().codeId &&
+        incoming().createdBy == existing().createdBy &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'gameName', 'title', 'description', 'code', 'platform', 'platformLabel', 'category', 'instructions',
+          'keywords', 'popular', 'verificationStatus', 'updatedAt'
+        ]);
+
+      allow delete: if isBootstrappedOwner() && isValidId(codeId);
+    }
+
+    // ==================== 3. CATEGORIES COLLECTION ====================
+
+    match /categories/{categoryId} {
+      allow get: if isSignedIn() && isValidId(categoryId) && existing().visibility == 'PUBLIC';
+      allow list: if isSignedIn() && existing().visibility == 'PUBLIC';
+
+      allow create: if isSignedIn() &&
+        isValidId(categoryId) &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().keys().hasAll([
+          'categoryId', 'name', 'description', 'iconKey',
+          'sortOrder', 'visibility', 'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'categoryId', 'name', 'description', 'iconKey',
+          'sortOrder', 'visibility', 'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidCategory(incoming(), categoryId);
+
+      allow update: if isBootstrappedOwner() &&
+        isValidId(categoryId) &&
+        isValidCategory(incoming(), categoryId) &&
+        incoming().categoryId == existing().categoryId &&
+        incoming().createdBy == existing().createdBy &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'description', 'iconKey', 'sortOrder', 'updatedAt'
+        ]);
+
+      allow delete: if isBootstrappedOwner() && isValidId(categoryId);
+    }
+
+    // ==================== 4. TUTORIALS COLLECTION ====================
+
+    match /tutorials/{tutorialId} {
+      allow get: if isSignedIn() && isValidId(tutorialId) && existing().visibility == 'PUBLIC';
+      allow list: if isSignedIn() && existing().visibility == 'PUBLIC';
+
+      allow create: if isSignedIn() &&
+        isValidId(tutorialId) &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().keys().hasAll([
+          'tutorialId', 'title', 'platform', 'summary', 'steps',
+          'supportedGames', 'sortOrder', 'visibility',
+          'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'tutorialId', 'title', 'platform', 'summary', 'steps',
+          'supportedGames', 'sortOrder', 'visibility',
+          'createdBy', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidTutorial(incoming(), tutorialId);
+
+      allow update: if isBootstrappedOwner() &&
+        isValidId(tutorialId) &&
+        isValidTutorial(incoming(), tutorialId) &&
+        incoming().tutorialId == existing().tutorialId &&
+        incoming().createdBy == existing().createdBy &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'platform', 'summary', 'steps', 'supportedGames',
+          'sortOrder', 'updatedAt'
+        ]);
+
+      allow delete: if isBootstrappedOwner() && isValidId(tutorialId);
+    }
+
+    // ==================== 5. REPORTS COLLECTION ====================
+
+    match /reports/{reportId} {
+      allow get: if isSignedIn() &&
+        isValidId(reportId) &&
+        (existing().userId == request.auth.uid || isBootstrappedOwner());
+
+      allow list: if isSignedIn() &&
+        (existing().userId == request.auth.uid || isBootstrappedOwner());
+
+      allow create: if isSignedIn() &&
+        isValidId(reportId) &&
+        incoming().keys().hasAll([
+          'userId', 'codeId', 'codeTitle', 'gameId', 'gameName',
+          'platform', 'reportType', 'status', 'createdAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'userId', 'codeId', 'codeTitle', 'gameId', 'gameName',
+          'platform', 'reportType', 'description', 'status', 'createdAt'
+        ]) &&
+        isValidCodeReport(incoming()) &&
+        exists(/databases/$(database)/documents/cheat_codes/$(incoming().codeId));
+
+      allow update: if false;
+
+      allow delete: if isSignedIn() &&
+        isValidId(reportId) &&
+        (existing().userId == request.auth.uid || isBootstrappedOwner());
+    }
+
+    // ==================== USER PROFILES & SYNC SUBCOLLECTIONS ====================
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) &&
+        isValidId(userId) &&
+        incoming().keys().hasAll(['userId', 'displayName', 'darkTheme', 'languageCode', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly(['userId', 'displayName', 'email', 'darkTheme', 'languageCode', 'createdAt', 'updatedAt']) &&
+        isValidUserProfile(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'darkTheme', 'languageCode', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /favorites/{codeId} {
+        allow get: if isOwner(userId) && isValidId(codeId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidId(codeId) &&
+          incoming().keys().hasAll(['codeId', 'gameId', 'title', 'code', 'platform', 'createdAt']) &&
+          incoming().keys().hasOnly(['codeId', 'gameId', 'title', 'code', 'platform', 'createdAt']) &&
+          isValidCloudFavorite(incoming(), codeId);
+
+        allow update: if false;
+
+        allow delete: if isOwner(userId) && isValidId(codeId);
+      }
+
+      match /recent_games/{gameId} {
+        allow get: if isOwner(userId) && isValidId(gameId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidId(gameId) &&
+          incoming().keys().hasAll(['gameId', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly(['gameId', 'createdAt', 'updatedAt']) &&
+          isValidCloudRecentGame(incoming(), gameId);
+
+        allow update: if isOwner(userId) &&
+          isValidId(gameId) &&
+          isValidCloudRecentGame(incoming(), gameId) &&
+          incoming().gameId == existing().gameId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(gameId);
+      }
+    }
+  }
+}

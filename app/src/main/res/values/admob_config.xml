@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Production AdMob IDs for release builds.
+        Debug builds ALWAYS enforce Google's official test ad unit IDs in code (AdConfig.kt)
+        to protect your AdMob account from invalid traffic during development.
+    -->
+    <string name="admob_app_id" translatable="false">ca-app-pub-5656005055733139~6154383684</string>
+    <string name="admob_banner_unit_id" translatable="false">ca-app-pub-5656005055733139/2016275236</string>
+    <string name="admob_interstitial_unit_id" translatable="false">ca-app-pub-5656005055733139/9200630681</string>
+</resources>

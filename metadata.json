@@ -1,0 +1,6 @@
+{
+  "name": "GTA Code Master",
+  "description": "Unofficial offline GTA cheat codes reference app with verified codes across 10 games, platform filtering, instant search, one-tap copy, favorites, and multi-language support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
